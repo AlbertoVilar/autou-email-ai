@@ -43,6 +43,14 @@
 <hr />
 
 <!-- =========================
+     BLOCO DE ERRO
+     - Aparece quando o controller coloca model.addAttribute("errorMessage", "...")
+     ========================= -->
+<div th:if="${errorMessage != null}">
+    <p><strong>Erro:</strong> <span th:text="${errorMessage}"></span></p>
+</div>
+
+<!-- =========================
      BLOCO DE RESULTADO
      - Renderiza condicionalmente usando Thymeleaf:
        - Se existir "result" no Model -> mostra os dados
@@ -72,7 +80,3 @@
 </div>
 </body>
 </html>
-
-
-
-

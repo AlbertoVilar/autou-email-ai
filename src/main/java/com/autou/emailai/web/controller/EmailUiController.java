@@ -1,32 +1,1 @@
-package com.autou.emailai.web.controller;
-
-import com.autou.emailai.web.dto.AnalyzeResultViewModel;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-@Controller
-public class EmailUiController {
-
-    @GetMapping("/")
-    public String index() {
-        return "index";
-    }
-
-    @PostMapping("/analyze-text")
-    public String analyzeText(@RequestParam("text") String text, Model model) {
-        // TODO: validar texto vazio
-        // TODO: chamar EmailAnalysisService (mais tarde)
-       var result = new AnalyzeResultViewModel(
-                "PRODUTIVO",
-                0.85,
-                "Stub: exemplo de motivo curto.",
-                "Stub: resposta sugerida para o e-mail."
-        );
-        model.addAttribute("result", result);
-        return "index";
-    }
-
-}
+﻿package com.autou.emailai.web.controller;import com.autou.emailai.web.dto.AnalyzeResultViewModel;import org.springframework.stereotype.Controller;import org.springframework.ui.Model;import org.springframework.web.bind.annotation.GetMapping;import org.springframework.web.bind.annotation.PostMapping;import org.springframework.web.bind.annotation.RequestParam;import org.springframework.web.multipart.MultipartFile;@Controllerpublic class EmailUiController {    private static final String INDEX_VIEW = "index";    @GetMapping("/")    public String index() {        return INDEX_VIEW;    }    @PostMapping("/analyze-text")    public String analyzeText(@RequestParam("text") String text, Model model) {        if (text == null || text.isBlank()) {            model.addAttribute("errorMessage", "Cole um texto de e-mail para análise.");            return INDEX_VIEW;        }        // TODO: chamar EmailAnalysisService (mais tarde)        var result = new AnalyzeResultViewModel(                "PRODUTIVO",                0.85,                "Stub: exemplo de motivo curto.",                "Stub: resposta sugerida para o e-mail."        );        model.addAttribute("result", result);        return INDEX_VIEW;    }    @PostMapping("/analyze-file")    public String analyzeFile(@RequestParam("file") MultipartFile file, Model model) {        if (file == null || file.isEmpty()) {            model.addAttribute("errorMessage", "Selecione um arquivo .txt ou .pdf para análise.");            return INDEX_VIEW;        }        String filename = (file.getOriginalFilename() != null) ? file.getOriginalFilename() : "arquivo";        long size = file.getSize();        AnalyzeResultViewModel result = new AnalyzeResultViewModel(                "PRODUTIVO",                0.80,                "Stub: arquivo recebido com sucesso (" + filename + ", " + size + " bytes).",                "Stub: resposta sugerida para o e-mail a partir do arquivo."        );        model.addAttribute("result", result);        return INDEX_VIEW;    }}

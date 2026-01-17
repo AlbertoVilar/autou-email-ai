@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AutoU - Classificador de E-mails</title>
+</head>
+<body>
+<h1>Classificador de E-mails (IA)</h1>
+<p>Cole o texto do e-mail ou envie um arquivo .txt/.pdf</p>
+
+<h2>Analisar texto</h2>
+<form method="post" action="/analyze-text">
+    <textarea name="text" rows="10" cols="80" placeholder="Cole aqui o texto do e-mail..."></textarea>
+    <br />
+    <button type="submit">Analisar texto</button>
+</form>
+
+<h2>Analisar arquivo</h2>
+<form method="post" action="/analyze-file" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".txt,.pdf" />
+    <button type="submit">Enviar e analisar</button>
+</form>
+
+<hr />
+
+<h2>Resultado</h2>
+<p>(aqui vamos mostrar categoria, confiança, motivo e resposta sugerida)</p>
+</body>
+</html>

@@ -1,16 +1,23 @@
 package com.autou.emailai.infrastructure.file;
 
 import com.autou.emailai.application.ports.FileTextExtractor;
+import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+
+@Component
 public class TxtTextExtractor implements FileTextExtractor {
 
     @Override
     public boolean supports(String filename, String contentType) {
-        return false;
+        if (filename != null && filename.toLowerCase().endsWith(".txt")) {
+            return true;
+        }
+        return contentType != null && contentType.equalsIgnoreCase("text/plain");
     }
 
     @Override
     public String extract(byte[] bytes) {
-        return "";
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 }

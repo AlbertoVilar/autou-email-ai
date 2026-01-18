@@ -1,7 +1,7 @@
 package com.autou.emailai.application.ports.out;
 
-import com.autou.emailai.domain.EmailAnalysisResult;
+import com.autou.emailai.application.ports.out.dto.AiAnalysisResponse;
 
 public interface AiClient {
-    EmailAnalysisResult analyze(String cleanedEmailText);
+    AiAnalysisResponse analyze(String cleanedEmailText);
 }

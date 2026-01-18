@@ -1,6 +1,6 @@
 package com.autou.emailai.infrastructure.file;
 
-import com.autou.emailai.application.ports.FileTextExtractor;
+import com.autou.emailai.application.ports.out.FileTextExtractor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;

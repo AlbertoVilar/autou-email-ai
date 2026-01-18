@@ -1,6 +1,6 @@
 package com.autou.emailai.infrastructure.file;
 
-import com.autou.emailai.application.ports.FileTextExtractor;
+import com.autou.emailai.application.ports.out.FileTextExtractor;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

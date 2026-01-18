@@ -1,6 +1,6 @@
 package com.autou.emailai.web.controller;
 
-import com.autou.emailai.application.ports.FileTextExtractor;
+import com.autou.emailai.application.ports.out.FileTextExtractor;
 import com.autou.emailai.web.dto.AnalyzeResultViewModel;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

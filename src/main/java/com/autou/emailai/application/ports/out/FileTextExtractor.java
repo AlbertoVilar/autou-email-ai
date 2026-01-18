@@ -1,4 +1,4 @@
-package com.autou.emailai.application.ports;
+package com.autou.emailai.application.ports.out;
 
 public interface FileTextExtractor {
 

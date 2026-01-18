@@ -16,8 +16,8 @@ import java.io.IOException;
 public class EmailUiController {
 
     private static final String INDEX_VIEW = "index";
-    private static final String MSG_FILE_REQUIRED = "Selecione um arquivo .txt ou .pdf para anÇ­lise.";
-    private static final String MSG_FILE_READ_FAILED = "NÇœo foi possÇðvel ler o arquivo enviado.";
+    private static final String MSG_FILE_REQUIRED = "Selecione um arquivo .txt ou .pdf para analise.";
+    private static final String MSG_FILE_READ_FAILED = "Nao foi possivel ler o arquivo enviado.";
 
     private final EmailAnalysisUseCase emailAnalysisUseCase;
 

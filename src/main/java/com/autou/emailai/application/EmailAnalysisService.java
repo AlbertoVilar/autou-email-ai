@@ -9,6 +9,7 @@ import com.autou.emailai.domain.EmailCategory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
 
@@ -16,11 +17,11 @@ import java.util.Locale;
 public class EmailAnalysisService implements EmailAnalysisUseCase {
 
     private static final int PREVIEW_LIMIT = 300;
-    private static final String MSG_TEXT_REQUIRED = "Cole um texto de e-mail para anÇ­lise.";
-    private static final String MSG_FILE_REQUIRED = "Selecione um arquivo .txt ou .pdf para anÇ­lise.";
-    private static final String MSG_UNSUPPORTED_FILE = "Formato nÇœo suportado. Use .txt ou .pdf.";
+    private static final String MSG_TEXT_REQUIRED = "Cole um texto de e-mail para analise.";
+    private static final String MSG_FILE_REQUIRED = "Selecione um arquivo .txt ou .pdf para analise.";
+    private static final String MSG_UNSUPPORTED_FILE = "Formato nao suportado. Use .txt ou .pdf.";
     private static final String MSG_EXTRACTION_FAILED = "Falha ao extrair texto do arquivo.";
-    private static final String MSG_EMPTY_TEXT = "NÇœo foi possÇðvel extrair texto do arquivo (PDF pode ser escaneado/imagem).";
+    private static final String MSG_EMPTY_TEXT = "Nao foi possivel extrair texto do arquivo (PDF pode ser escaneado/imagem).";
 
     private final List<FileTextExtractor> extractors;
     private final AiClient aiClient;
@@ -76,7 +77,7 @@ public class EmailAnalysisService implements EmailAnalysisUseCase {
             throw new IllegalArgumentException(MSG_EXTRACTION_FAILED, e);
         }
 
-        String cleaned = (extracted == null) ? "" : extracted.strip();
+        String cleaned = normalizeUnicode(extracted).strip();
         if (cleaned.isEmpty()) {
             throw new IllegalArgumentException(MSG_EMPTY_TEXT);
         }
@@ -93,7 +94,7 @@ public class EmailAnalysisService implements EmailAnalysisUseCase {
         return new EmailAnalysisResult(
                 EmailCategory.PRODUTIVO,
                 0.80,
-                "Stub: extraÇõÇœo OK. Preview: " + preview,
+                "Stub: extracao OK. Preview: " + preview,
                 "Stub: resposta sugerida para o e-mail a partir do arquivo.",
                 "stub"
         );
@@ -130,5 +131,13 @@ public class EmailAnalysisService implements EmailAnalysisUseCase {
         } catch (IllegalArgumentException ex) {
             return EmailCategory.PRODUTIVO;
         }
+    }
+
+    private String normalizeUnicode(String text) {
+        if (text == null) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFKC);
+        return normalized.replaceAll("[\\p{C}&&[^\\n\\r\\t]]", "");
     }
 }

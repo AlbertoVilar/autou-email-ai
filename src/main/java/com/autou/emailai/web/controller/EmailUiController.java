@@ -1,5 +1,6 @@
 package com.autou.emailai.web.controller;
 
+import com.autou.emailai.application.exception.InvalidFileException;
 import com.autou.emailai.application.ports.in.EmailAnalysisUseCase;
 import com.autou.emailai.domain.EmailAnalysisResult;
 import com.autou.emailai.web.dto.AnalyzeResultViewModel;
@@ -32,23 +33,15 @@ public class EmailUiController {
 
     @PostMapping("/analyze-text")
     public String analyzeText(@RequestParam("text") String text, Model model) {
-        try {
-            EmailAnalysisResult result = emailAnalysisUseCase.analyzeText(text);
-            model.addAttribute("result", toViewModel(result));
-            return INDEX_VIEW;
-        } catch (IllegalArgumentException ex) {
-            model.addAttribute("errorMessage", ex.getMessage());
-            model.addAttribute("result", null);
-            return INDEX_VIEW;
-        }
+        EmailAnalysisResult result = emailAnalysisUseCase.analyzeText(text);
+        model.addAttribute("result", toViewModel(result));
+        return INDEX_VIEW;
     }
 
     @PostMapping("/analyze-file")
     public String analyzeFile(@RequestParam("file") MultipartFile file, Model model) {
         if (file == null || file.isEmpty()) {
-            model.addAttribute("errorMessage", MSG_FILE_REQUIRED);
-            model.addAttribute("result", null);
-            return INDEX_VIEW;
+            throw new InvalidFileException(MSG_FILE_REQUIRED);
         }
 
         String filename = (file.getOriginalFilename() != null) ? file.getOriginalFilename() : "arquivo";
@@ -58,20 +51,11 @@ public class EmailUiController {
         try {
             bytes = file.getBytes();
         } catch (IOException e) {
-            model.addAttribute("errorMessage", MSG_FILE_READ_FAILED);
-            model.addAttribute("result", null);
-            return INDEX_VIEW;
+            throw new InvalidFileException(MSG_FILE_READ_FAILED, e);
         }
-
-        try {
-            EmailAnalysisResult result = emailAnalysisUseCase.analyzeFile(bytes, filename, contentType);
-            model.addAttribute("result", toViewModel(result));
-            return INDEX_VIEW;
-        } catch (IllegalArgumentException ex) {
-            model.addAttribute("errorMessage", ex.getMessage());
-            model.addAttribute("result", null);
-            return INDEX_VIEW;
-        }
+        EmailAnalysisResult result = emailAnalysisUseCase.analyzeFile(bytes, filename, contentType);
+        model.addAttribute("result", toViewModel(result));
+        return INDEX_VIEW;
     }
 
     private AnalyzeResultViewModel toViewModel(EmailAnalysisResult result) {

@@ -2,6 +2,10 @@ package com.autou.emailai.infrastructure.ai;
 
 import com.autou.emailai.application.ports.out.AiClient;
 import com.autou.emailai.application.ports.out.dto.AiAnalysisResponse;
+import com.autou.emailai.application.exception.AiNotConfiguredException;
+import com.autou.emailai.application.exception.AiQuotaException;
+import com.autou.emailai.application.exception.AiRequestFailedException;
+import com.autou.emailai.application.exception.InvalidAiResponseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
@@ -25,6 +29,8 @@ public class OpenAiClient implements AiClient {
     private static final String MSG_NO_API_KEY = "Chave de IA nao configurada.";
     private static final String MSG_AI_FAILURE = "Falha ao consultar a IA. Tente novamente.";
     private static final String MSG_AI_INVALID = "Resposta da IA invalida. Tente novamente.";
+    private static final String MSG_AI_QUOTA = "Sem cota na OpenAI. Verifique seu plano.";
+    private static final String QUOTA_CODE = "insufficient_quota";
     private static final String PROMPT_SYSTEM = """
             Voce e um classificador de emails.
             Classifique o email como PRODUTIVO ou IMPRODUTIVO.
@@ -52,7 +58,7 @@ public class OpenAiClient implements AiClient {
     @Override
     public AiAnalysisResponse analyze(String cleanedEmailText) {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException(MSG_NO_API_KEY);
+            throw new AiNotConfiguredException(MSG_NO_API_KEY);
         }
 
         Map<String, Object> payload = buildRequest(cleanedEmailText);
@@ -67,7 +73,7 @@ public class OpenAiClient implements AiClient {
 
             String outputText = extractOutputText(responseBody);
             if (outputText == null || outputText.isBlank()) {
-                throw new IllegalStateException(MSG_AI_INVALID);
+                throw new InvalidAiResponseException(MSG_AI_INVALID);
             }
 
             AiAnalysisResponse response = objectMapper.readValue(outputText, AiAnalysisResponse.class);
@@ -75,13 +81,16 @@ public class OpenAiClient implements AiClient {
             return response;
         } catch (RestClientResponseException ex) {
             LOGGER.warn("OpenAI error status={} bodyLength={}", ex.getRawStatusCode(), safeLength(ex.getResponseBodyAsString()), ex);
-            throw new IllegalStateException(MSG_AI_FAILURE, ex);
+            if (ex.getRawStatusCode() == 429 && hasQuotaError(ex.getResponseBodyAsString())) {
+                throw new AiQuotaException(MSG_AI_QUOTA);
+            }
+            throw new AiRequestFailedException(MSG_AI_FAILURE, ex);
         } catch (RestClientException ex) {
             LOGGER.warn("OpenAI request failed", ex);
-            throw new IllegalStateException(MSG_AI_FAILURE, ex);
+            throw new AiRequestFailedException(MSG_AI_FAILURE, ex);
         } catch (IOException ex) {
             LOGGER.warn("OpenAI response parse failed", ex);
-            throw new IllegalStateException(MSG_AI_INVALID, ex);
+            throw new InvalidAiResponseException(MSG_AI_INVALID, ex);
         }
     }
 
@@ -160,20 +169,27 @@ public class OpenAiClient implements AiClient {
 
     private void validateResponse(AiAnalysisResponse response) {
         if (response == null) {
-            throw new IllegalStateException(MSG_AI_INVALID);
+            throw new InvalidAiResponseException(MSG_AI_INVALID);
         }
         if (response.category() == null || response.category().isBlank()) {
-            throw new IllegalStateException(MSG_AI_INVALID);
+            throw new InvalidAiResponseException(MSG_AI_INVALID);
         }
         if (response.reason() == null || response.reason().isBlank()) {
-            throw new IllegalStateException(MSG_AI_INVALID);
+            throw new InvalidAiResponseException(MSG_AI_INVALID);
         }
         if (response.suggestedReply() == null || response.suggestedReply().isBlank()) {
-            throw new IllegalStateException(MSG_AI_INVALID);
+            throw new InvalidAiResponseException(MSG_AI_INVALID);
         }
     }
 
     private int safeLength(String value) {
         return (value == null) ? 0 : value.length();
+    }
+
+    private boolean hasQuotaError(String responseBody) {
+        if (responseBody == null || responseBody.isBlank()) {
+            return false;
+        }
+        return responseBody.contains(QUOTA_CODE);
     }
 }

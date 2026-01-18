@@ -4,6 +4,11 @@ import com.autou.emailai.application.ports.in.EmailAnalysisUseCase;
 import com.autou.emailai.application.ports.out.AiClient;
 import com.autou.emailai.application.ports.out.FileTextExtractor;
 import com.autou.emailai.application.ports.out.dto.AiAnalysisResponse;
+import com.autou.emailai.application.exception.AiNotConfiguredException;
+import com.autou.emailai.application.exception.AiQuotaException;
+import com.autou.emailai.application.exception.AiRequestFailedException;
+import com.autou.emailai.application.exception.InvalidAiResponseException;
+import com.autou.emailai.application.exception.InvalidFileException;
 import com.autou.emailai.domain.EmailAnalysisResult;
 import com.autou.emailai.domain.EmailCategory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -23,6 +28,7 @@ public class EmailAnalysisService implements EmailAnalysisUseCase {
     private static final String MSG_EMPTY_TEXT = "Nao foi possivel extrair texto do arquivo (PDF pode ser escaneado/imagem).";
     private static final String MSG_AI_NOT_CONFIGURED = "Chave de IA nao configurada.";
     private static final String MSG_AI_FAILURE = "Falha ao consultar a IA. Tente novamente.";
+    private static final String MSG_AI_INVALID = "Resposta da IA invalida. Tente novamente.";
     private static final String MSG_AI_INVALID_CATEGORY = "Categoria retornada pela IA e invalida.";
 
     private final List<FileTextExtractor> extractors;
@@ -48,7 +54,7 @@ public class EmailAnalysisService implements EmailAnalysisUseCase {
     @Override
     public EmailAnalysisResult analyzeFile(byte[] bytes, String filename, String contentType) {
         if (bytes == null || bytes.length == 0) {
-            throw new IllegalArgumentException(MSG_FILE_REQUIRED);
+            throw new InvalidFileException(MSG_FILE_REQUIRED);
         }
 
         FileTextExtractor extractor = extractors.stream()
@@ -57,26 +63,26 @@ public class EmailAnalysisService implements EmailAnalysisUseCase {
                 .orElse(null);
 
         if (extractor == null) {
-            throw new IllegalArgumentException(MSG_UNSUPPORTED_FILE);
+            throw new InvalidFileException(MSG_UNSUPPORTED_FILE);
         }
 
         String extracted;
         try {
             extracted = extractor.extract(bytes);
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException(MSG_EXTRACTION_FAILED, e);
+            throw new InvalidFileException(MSG_EXTRACTION_FAILED, e);
         }
 
         String cleaned = normalizeUnicode(extracted).strip();
         if (cleaned.isEmpty()) {
-            throw new IllegalArgumentException(MSG_EMPTY_TEXT);
+            throw new InvalidFileException(MSG_EMPTY_TEXT);
         }
         return analyzeWithAi(cleaned);
     }
 
     private EmailAnalysisResult toDomain(AiAnalysisResponse response) {
         if (response == null) {
-            throw new IllegalArgumentException(MSG_AI_FAILURE);
+            throw new InvalidAiResponseException(MSG_AI_INVALID);
         }
 
         EmailCategory category = resolveCategory(response.category());
@@ -92,26 +98,26 @@ public class EmailAnalysisService implements EmailAnalysisUseCase {
 
     private EmailCategory resolveCategory(String rawCategory) {
         if (rawCategory == null || rawCategory.isBlank()) {
-            throw new IllegalArgumentException(MSG_AI_INVALID_CATEGORY);
+            throw new InvalidAiResponseException(MSG_AI_INVALID_CATEGORY);
         }
         try {
             return EmailCategory.valueOf(rawCategory.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException(MSG_AI_INVALID_CATEGORY, ex);
+            throw new InvalidAiResponseException(MSG_AI_INVALID_CATEGORY, ex);
         }
     }
 
     private EmailAnalysisResult analyzeWithAi(String cleaned) {
         if (aiClient == null) {
-            throw new IllegalArgumentException(MSG_AI_NOT_CONFIGURED);
+            throw new AiNotConfiguredException(MSG_AI_NOT_CONFIGURED);
         }
         try {
             AiAnalysisResponse response = aiClient.analyze(cleaned);
             return toDomain(response);
-        } catch (IllegalStateException ex) {
-            throw new IllegalArgumentException(ex.getMessage(), ex);
+        } catch (AiNotConfiguredException | AiQuotaException | AiRequestFailedException | InvalidAiResponseException ex) {
+            throw ex;
         } catch (RuntimeException ex) {
-            throw new IllegalArgumentException(MSG_AI_FAILURE, ex);
+            throw new AiRequestFailedException(MSG_AI_FAILURE, ex);
         }
     }
 

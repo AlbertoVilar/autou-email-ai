@@ -30,7 +30,12 @@ public class EmailUiController {
 
     @PostMapping("/analyze-text")
     public String analyzeText(@RequestParam("text") String text, Model model) {
-        // TODO: validar texto vazio
+        if (text == null || text.isBlank()) {
+            model.addAttribute("errorMessage", "Cole um texto de e-mail para análise.");
+            model.addAttribute("result", null);
+            return INDEX_VIEW;
+        }
+
         // TODO: chamar EmailAnalysisService (mais tarde)
         var result = new AnalyzeResultViewModel(
                 "PRODUTIVO",
@@ -46,6 +51,7 @@ public class EmailUiController {
     public String analyzeFile(@RequestParam("file") MultipartFile file, Model model) {
         if (file == null || file.isEmpty()) {
             model.addAttribute("errorMessage", "Selecione um arquivo .txt ou .pdf para análise.");
+            model.addAttribute("result", null);
             return INDEX_VIEW;
         }
 
@@ -59,6 +65,7 @@ public class EmailUiController {
 
         if (extractor == null) {
             model.addAttribute("errorMessage", "Formato não suportado. Use .txt ou .pdf.");
+            model.addAttribute("result", null);
             return INDEX_VIEW;
         }
 
@@ -67,6 +74,7 @@ public class EmailUiController {
             bytes = file.getBytes();
         } catch (IOException e) {
             model.addAttribute("errorMessage", "Não foi possível ler o arquivo enviado.");
+            model.addAttribute("result", null);
             return INDEX_VIEW;
         }
 
@@ -75,6 +83,7 @@ public class EmailUiController {
             extracted = extractor.extract(bytes);
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", "Falha ao extrair texto do arquivo.");
+            model.addAttribute("result", null);
             return INDEX_VIEW;
         }
 
@@ -84,6 +93,7 @@ public class EmailUiController {
                     "errorMessage",
                     "Não foi possível extrair texto do arquivo (PDF pode ser escaneado/imagem)."
             );
+            model.addAttribute("result", null);
             return INDEX_VIEW;
         }
 

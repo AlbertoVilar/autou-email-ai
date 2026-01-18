@@ -34,3 +34,6 @@ build/
 *.log
 *.tmp
 .DS_Store
+
+# Local notes
+docs/openai-status.md

@@ -1,5 +1,5 @@
-﻿<!doctype html>
-<html lang="pt-BR">
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,72 +11,56 @@
 
 <p>Cole o texto do e-mail ou envie um arquivo .txt/.pdf</p>
 
-<!-- =========================
-     FORM 1: Analisar texto colado
-     - Envia um POST para /analyze-text
-     - O campo "text" será capturado no controller via @RequestParam("text")
-     ========================= -->
 <h2>Analisar texto</h2>
 <form method="post" action="/analyze-text">
-    <!-- Textarea onde o usuário cola o conteúdo do e-mail -->
     <textarea name="text" rows="10" cols="80" placeholder="Cole aqui o texto do e-mail..."></textarea>
     <br />
-    <!-- Botão que dispara o envio do formulário (POST) -->
     <button type="submit">Analisar texto</button>
 </form>
 
-<!-- =========================
-     FORM 2: Analisar arquivo enviado
-     - Envia um POST para /analyze-file
-     - enctype="multipart/form-data" é obrigatório para upload
-     - O campo "file" será recebido no controller como MultipartFile
-     ========================= -->
 <h2>Analisar arquivo</h2>
-
 <form method="post" action="/analyze-file" enctype="multipart/form-data">
-    <!-- Input de arquivo: restringe a seleção para .txt e .pdf (ajuda o usuário, mas não valida no backend) -->
     <input type="file" name="file" accept=".txt,.pdf" />
-    <!-- Botão que dispara o envio do arquivo -->
     <button type="submit">Enviar e analisar</button>
 </form>
 
 <hr />
 
-<!-- =========================
-     BLOCO DE ERRO
-     - Aparece quando o controller coloca model.addAttribute("errorMessage", "...")
-     ========================= -->
 <div th:if="${errorMessage != null}">
     <p><strong>Erro:</strong> <span th:text="${errorMessage}"></span></p>
 </div>
 
-<!-- =========================
-     BLOCO DE RESULTADO
-     - Renderiza condicionalmente usando Thymeleaf:
-       - Se existir "result" no Model -> mostra os dados
-       - Se não existir -> mostra placeholder
-     ========================= -->
-<h2>Resultado</h2>
+<div th:if="${errorMessage == null}">
+    <h2>Resultado</h2>
+    <div th:if="${result != null}">
+        <p><strong>Categoria:</strong> <span th:text="${result.category}"></span></p>
+        <p><strong>Confianca:</strong> <span th:text="|${T(java.lang.Math).round(result.confidence * 100)}%|"></span></p>
+        <p><strong>Motivo:</strong> <span th:text="${result.reason}"></span></p>
+        <p><strong>Resposta sugerida:</strong></p>
+        <pre id="suggestedReply" th:text="${result.suggestedReply}"></pre>
+        <button type="button" id="copyReplyButton">Copiar resposta</button>
+    </div>
 
-<!-- Se o controller colocou model.addAttribute("result", ...) este bloco aparece -->
-<div th:if="${result != null}">
-    <!-- Exibe a categoria retornada (PRODUTIVO / IMPRODUTIVO) -->
-    <p><strong>Categoria:</strong> <span th:text="${result.category}"></span></p>
-
-    <!-- Exibe a confiança (número) retornada pela análise -->
-    <p><strong>Confiança:</strong> <span th:text="${result.confidence}"></span></p>
-
-    <!-- Exibe um motivo curto justificando a classificação -->
-    <p><strong>Motivo:</strong> <span th:text="${result.reason}"></span></p>
-
-    <!-- Exibe a resposta sugerida para copiar e colar -->
-    <p><strong>Resposta sugerida:</strong></p>
-    <pre th:text="${result.suggestedReply}"></pre>
+    <div th:if="${result == null}">
+        <p>(aqui vamos mostrar categoria, confianca, motivo e resposta sugerida)</p>
+    </div>
 </div>
 
-<!-- Se não existir "result" no Model (ex: primeiro acesso via GET /), mostra o placeholder -->
-<div th:if="${result == null}">
-    <p>(aqui vamos mostrar categoria, confiança, motivo e resposta sugerida)</p>
-</div>
+<script>
+    const copyButton = document.getElementById("copyReplyButton");
+    if (copyButton) {
+        copyButton.addEventListener("click", async () => {
+            const text = document.getElementById("suggestedReply")?.innerText ?? "";
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                copyButton.textContent = "Copiado!";
+                setTimeout(() => copyButton.textContent = "Copiar resposta", 1500);
+            } catch (e) {
+                copyButton.textContent = "Falha ao copiar";
+            }
+        });
+    }
+</script>
 </body>
 </html>

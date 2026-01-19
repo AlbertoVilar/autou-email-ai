@@ -6,6 +6,16 @@ Aplicação web em Spring Boot para classificar e-mails como **PRODUTIVO** ou
 Interface simples em HTML/Thymeleaf, preparada para deploy em plataformas como
 Render.
 
+🚀 **Demo (Produção)**
+
+- 🌐 https://autou-email-ai-prod.onrender.com/
+
+🧪 **Endpoints principais**
+
+- 🏠 `GET /` – UI web (formulário principal)
+- ✍️ `POST /analyze-text` – análise de texto colado
+- 📎 `POST /analyze-file` – análise via upload `.txt`/`.pdf`
+
 ## Visão geral da solução
 
 - Entrada via UI web:
@@ -72,9 +82,9 @@ Benefícios:
 - **Deploy:** preparado para plataformas PaaS (ex.: Render), com `server.port`
   configurado via variável `PORT`.
 
-## Como rodar localmente
+## ⚙️ Como rodar localmente
 
-### Pré-requisitos
+### 📦 Pré-requisitos
 
 - JDK 21+
 - Maven 3.9+ (ou compatível)

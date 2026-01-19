@@ -7,9 +7,12 @@ import com.autou.emailai.application.exception.InvalidAiResponseException;
 import com.autou.emailai.application.exception.InvalidFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 public class UiExceptionHandler {
@@ -38,5 +41,14 @@ public class UiExceptionHandler {
         model.addAttribute("errorMessage", MSG_UNEXPECTED);
         model.addAttribute("result", null);
         return INDEX_VIEW;
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleMissingStaticResource(NoResourceFoundException ex) {
+        String resourcePath = ex.getResourcePath();
+        if (resourcePath != null && resourcePath.contains("favicon")) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 }

@@ -30,19 +30,20 @@
     <p><strong>Erro:</strong> <span th:text="${errorMessage}"></span></p>
 </div>
 
-<h2>Resultado</h2>
+<div th:if="${errorMessage == null}">
+    <h2>Resultado</h2>
+    <div th:if="${result != null}">
+        <p><strong>Categoria:</strong> <span th:text="${result.category}"></span></p>
+        <p><strong>Confianca:</strong> <span th:text="|${T(java.lang.Math).round(result.confidence * 100)}%|"></span></p>
+        <p><strong>Motivo:</strong> <span th:text="${result.reason}"></span></p>
+        <p><strong>Resposta sugerida:</strong></p>
+        <pre id="suggestedReply" th:text="${result.suggestedReply}"></pre>
+        <button type="button" id="copyReplyButton">Copiar resposta</button>
+    </div>
 
-<div th:if="${result != null}">
-    <p><strong>Categoria:</strong> <span th:text="${result.category}"></span></p>
-    <p><strong>Confianca:</strong> <span th:text="|${T(java.lang.Math).round(result.confidence * 100)}%|"></span></p>
-    <p><strong>Motivo:</strong> <span th:text="${result.reason}"></span></p>
-    <p><strong>Resposta sugerida:</strong></p>
-    <pre id="suggestedReply" th:text="${result.suggestedReply}"></pre>
-    <button type="button" id="copyReplyButton">Copiar resposta</button>
-</div>
-
-<div th:if="${result == null}">
-    <p>(aqui vamos mostrar categoria, confianca, motivo e resposta sugerida)</p>
+    <div th:if="${result == null}">
+        <p>(aqui vamos mostrar categoria, confianca, motivo e resposta sugerida)</p>
+    </div>
 </div>
 
 <script>
